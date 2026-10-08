@@ -1,8 +1,8 @@
-/* 
- * CS:APP Data Lab 
- * 
- * <Please put your name and userid here>
- * 
+/*
+ * CS:APP Data Lab
+ *
+ * 学生李林蔚 学号25800190092
+ *
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
  *
@@ -10,7 +10,7 @@
  * compiler. You can still use printf for debugging without including
  * <stdio.h>, although you might get a compiler warning. In general,
  * it's not good practice to ignore compiler warnings, but in this
- * case it's OK.  
+ * case it's OK.
  */
 
 #if 0
@@ -26,9 +26,9 @@ editing the collection of functions in this source file.
 INTEGER CODING RULES:
 
   Replace the "return" statement in each function with one
-  or more lines of C code that implements the function. Your code 
+  or more lines of C code that implements the function. Your code
   must conform to the following style:
- 
+
   int Funct(arg1, arg2, ...) {
       /* brief description of how your implementation works */
       int var1 = Expr1;
@@ -47,7 +47,7 @@ INTEGER CODING RULES:
   2. Function arguments and local variables (no global variables).
   3. Unary integer operations ! ~
   4. Binary integer operations & ^ | + << >>
-    
+
   Some of the problems restrict the set of allowed operators even further.
   Each "Expr" may consist of multiple operators. You are not restricted to
   one operator per line.
@@ -62,7 +62,7 @@ INTEGER CODING RULES:
   7. Use any data type other than int.  This implies that you
      cannot use arrays, structs, or unions.
 
- 
+
   You may assume that your machine:
   1. Uses 2s complement, 32-bit representations of integers.
   2. Performs right shifts arithmetically.
@@ -110,7 +110,7 @@ You are expressly forbidden to:
 
 
 NOTES:
-  1. Use the dlc (data lab checker) compiler (described in the handout) to 
+  1. Use the dlc (data lab checker) compiler (described in the handout) to
      check the legality of your solutions.
   2. Each function has a maximum number of operations (integer, logical,
      or comparison) that you are allowed to use for your implementation
@@ -120,17 +120,17 @@ NOTES:
   3. Use the btest test harness to check your functions for correctness.
   4. Use the BDD checker to formally verify your functions
   5. The maximum number of ops for each function is given in the
-     header comment for each function. If there are any inconsistencies 
+     header comment for each function. If there are any inconsistencies
      between the maximum ops in the writeup and in this file, consider
      this file the authoritative source.
 
 /*
  * STEP 2: Modify the following functions according the coding rules.
- * 
+ *
  *   IMPORTANT. TO AVOID GRADING SURPRISES:
  *   1. Use the dlc compiler to check that your solutions conform
  *      to the coding rules.
- *   2. Use the BDD checker to formally verify that your solutions produce 
+ *   2. Use the BDD checker to formally verify that your solutions produce
  *      the correct answers.
  */
 
@@ -139,26 +139,26 @@ NOTES:
 #include "bits.h"
 
 // P1
-/* 
+/*
  * signMask - return a mask with only the most significant bit set (0x80000000)
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 2
  *   Rating: 1
  */
 int signMask(void) {
-  return 1;
+  return 1 << 31;
 }
 
 // P2
-/* 
- * bitXor - x^y using only ~ and & 
+/*
+ * bitXor - x^y using only ~ and &
  *   Example: bitXor(4, 5) = 1, bitXor(7, 7) = 0
  *   Legal ops: ~ &
  *   Max ops: 8
  *   Rating: 2
  */
 int bitXor(int x, int y) {
-	return 2;
+  return ~(~x & ~y) & ~(x & y);
 }
 
 // P3
@@ -170,7 +170,8 @@ int bitXor(int x, int y) {
  *   Rating: 3
  */
 int negativePart(int x){
-  return 3;
+  int negative = x >> 31;
+  return negative & (~x + 1);
 }
 
 
@@ -185,11 +186,15 @@ int negativePart(int x){
  *   Rating: 4
  */
 int copyByteWithin(int x, int src, int dst) {
-  return 4;
+  int srcShift = src << 3;
+  int dstShift = dst << 3;
+  int byte = (x >> srcShift) & 0xff;
+  int mask = 0xff << dstShift;
+  return (x & ~mask) | (byte << dstShift);
 }
 
 // P5
-/* 
+/*
  * logicalShift - shift x to the right by n bits, using a logical shift
  *   Can assume that 0 <= n <= 31
  *   Examples: logicalShift(0x87654321,4) = 0x08765432
@@ -198,7 +203,8 @@ int copyByteWithin(int x, int src, int dst) {
  *   Rating: 4
  */
 int logicalShift(int x, int n) {
-  return 5;
+  int fill = ((1 << 31) >> n) << 1;
+  return (x >> n) & ~fill;
 }
 
 // P6
@@ -210,7 +216,9 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int swapNibblePairs(int x) {
-  return 6;
+  int mask = 0x0f | (0x0f << 8);
+  mask = mask | (mask << 16);
+  return ((x & mask) << 4) | ((x >> 4) & mask);
 }
 
 // P7
@@ -223,7 +231,9 @@ int swapNibblePairs(int x) {
  *   Rating: 4
  */
 int secondLowestZeroBit(int x) {
-  return 7;
+  int zero = ~x;
+  int rest = zero & (zero + ~0);
+  return rest & (~rest + 1);
 }
 
 // P8
@@ -236,11 +246,16 @@ int secondLowestZeroBit(int x) {
  *   Rating: 5
  */
 int oddParity(int x) {
-  return 8;
+  x = x ^ (x >> 16);
+  x = x ^ (x >> 8);
+  x = x ^ (x >> 4);
+  x = x ^ (x >> 2);
+  x = x ^ (x >> 1);
+  return !(x & 1);
 }
 
 // P9
-/* 
+/*
  * rotateRightBits - rotate x to right by n bits
  *   you can assume n >= 0
  *   Examples: rotateRightBits(0x12345678, 8) = 0x78123456
@@ -249,7 +264,10 @@ int oddParity(int x) {
  *   Rating: 5
  */
 int rotateRightBits(int x, int n) {
-  return 9;
+  int shift = n & 31;
+  int right = (x >> shift) & ~(((1 << 31) >> shift) << 1);
+  int left = x << ((~shift + 1) & 31);
+  return right | left;
 }
 
 // P10
@@ -264,11 +282,13 @@ int rotateRightBits(int x, int n) {
  *   Rating: 5
  */
 int roundEvenPow2(int x, int n) {
-  return 10;
+  int mask = (1 << n) + ~0;
+  int bias = (mask >> 1) + ((x >> n) & 1);
+  return (x + bias) & ~mask;
 }
 
 // P11
-/* 
+/*
  * midpointTowardFirst - return the exact mathematical midpoint (x+y)/2
  *   without overflow. If the exact midpoint lies halfway between two
  *   integers, choose the adjacent integer that is closer to the first
@@ -280,12 +300,18 @@ int roundEvenPow2(int x, int n) {
  *   Rating: 5
  */
 int midpointTowardFirst(int x, int y) {
-  return 11;
+  int sx = x >> 31;
+  int sy = y >> 31;
+  int opposite = sx ^ sy;
+  int xGreater = ((opposite & ~sx) |
+                  (~opposite & ((y + ~x + 1) >> 31))) & 1;
+  int lower = (x & y) + ((x ^ y) >> 1);
+  return lower + (xGreater & (x ^ y) & 1);
 }
 
 
 // P12
-/* 
+/*
  * isBetweenEitherOrder - return 1 when x lies in the inclusive interval whose
  *   endpoints are a and b. The endpoints may be given in either order.
  *   Example: isBetweenEitherOrder(5, 8, 3) = 1.
@@ -294,12 +320,23 @@ int midpointTowardFirst(int x, int y) {
  *   Rating: 7
  */
 int isBetweenEitherOrder(int x, int a, int b) {
-  return 12;
+  int sx = x >> 31;
+  int sa = a >> 31;
+  int sb = b >> 31;
+  int ax = sa ^ sx;
+  int xb = sx ^ sb;
+  int bx = sb ^ sx;
+  int xa = sx ^ sa;
+  int aLeX = (ax & sa) | (~ax & ~((x + ~a + 1) >> 31));
+  int xLeB = (xb & sx) | (~xb & ~((b + ~x + 1) >> 31));
+  int bLeX = (bx & sb) | (~bx & ~((x + ~b + 1) >> 31));
+  int xLeA = (xa & sx) | (~xa & ~((a + ~x + 1) >> 31));
+  return ((aLeX & xLeB) | (bLeX & xLeA)) & 1;
 }
 
 // P13
-/* 
- * mul5Sat - return x*5, and if x*5 overflow, change the result to 
+/*
+ * mul5Sat - return x*5, and if x*5 overflow, change the result to
  * INT_MAX(0x7fffffff) or INT_MIN(0x80000000) correspondingly
  *   Examples: mul5Sat(1) = 0x5, mul5Sat(0x40000000) = 0x7fffffff
  *   Legal ops: ! ~ & ^ | + << >>
@@ -307,11 +344,17 @@ int isBetweenEitherOrder(int x, int a, int b) {
  *   Rating: 7
  */
 int mul5Sat(int x) {
-  return 13;
+  int twice = x + x;
+  int four = twice + twice;
+  int five = four + x;
+  int overflow = ((x ^ twice) >> 31) | ((twice ^ four) >> 31) |
+                 ((~(four ^ x) & (four ^ five)) >> 31);
+  int saturation = (1 << 31) ^ ~(x >> 31);
+  return (overflow & saturation) | (~overflow & five);
 }
 
 // P14
-/* 
+/*
  * classifyAdd3 - classify the exact mathematical sum x+y+z.
  *   Return 1 if the sum is greater than INT_MAX, -1 if it is less than
  *   INT_MIN, and 0 otherwise. You may not use a wider integer type.
@@ -320,7 +363,15 @@ int mul5Sat(int x) {
  *   Rating: 7
  */
 int classifyAdd3(int x, int y, int z) {
-  return 14;
+  int first = x + y;
+  int low = first + z;
+  int carry1 = (((x & y) | ((x | y) & ~first)) >> 31) & 1;
+  int carry2 = (((first & z) | ((first | z) & ~low)) >> 31) & 1;
+  int high = (x >> 31) + (y >> 31) + (z >> 31) + carry1 + carry2;
+  int positive = (!(high >> 31) & !!high) | (!high & !!(low >> 31));
+  int negative = (!!(high >> 31) & !!(high + 1)) |
+                 (!(high + 1) & !(low >> 31));
+  return positive + (~negative + 1);
 }
 
 // P15
@@ -337,11 +388,44 @@ int classifyAdd3(int x, int y, int z) {
  *   Rating: 7
  */
 unsigned floatScaleThreeHalves(unsigned uf) {
-  return 15;
+  unsigned sign = uf & 0x80000000u;
+  unsigned exponent = (uf >> 23) & 0xffu;
+  unsigned fraction = uf & 0x7fffffu;
+  unsigned significand;
+  unsigned product;
+  unsigned shift;
+  unsigned remainder;
+  unsigned half;
+  unsigned resultExponent;
+
+  if (exponent == 0xffu || (exponent == 0 && fraction == 0))
+    return uf;
+
+  significand = exponent ? ((1u << 23) | fraction) : fraction;
+  product = significand + significand + significand;
+  shift = product >= (1u << 25) ? 2u : 1u;
+  remainder = product & ((1u << shift) - 1u);
+  half = 1u << (shift - 1u);
+  significand = product >> shift;
+  if (remainder > half || (remainder == half && (significand & 1u)))
+    significand++;
+
+  resultExponent = exponent ? exponent : 1u;
+  if (shift == 2u)
+    resultExponent++;
+  if (significand >= (1u << 24)) {
+    significand >>= 1;
+    resultExponent++;
+  }
+  if (resultExponent >= 0xffu)
+    return sign | 0x7f800000u;
+  if (significand < (1u << 23))
+    return sign | significand;
+  return sign | (resultExponent << 23) | (significand & 0x7fffffu);
 }
 
 // P16
-/* 
+/*
  * floatRoundEven - round the floating-point value represented by uf to the
  *   nearest integer, with halfway cases rounded to the even integer. Return
  *   the bit-level representation of that integer as a single-precision float.
@@ -353,7 +437,32 @@ unsigned floatScaleThreeHalves(unsigned uf) {
  *   Rating: 10
  */
 unsigned floatRoundEven(unsigned uf) {
-  return 16;
+  unsigned sign = uf & 0x80000000u;
+  unsigned exponent = (uf >> 23) & 0xffu;
+  unsigned fraction = uf & 0x7fffffu;
+  unsigned shift;
+  unsigned mask;
+  unsigned discarded;
+  unsigned half;
+  unsigned rounded;
+
+  if (exponent == 0xffu)
+    return uf;
+  if (exponent < 126u)
+    return sign;
+  if (exponent == 126u)
+    return fraction ? (sign | 0x3f800000u) : sign;
+  if (exponent >= 150u)
+    return uf;
+
+  shift = 150u - exponent;
+  mask = (1u << shift) - 1u;
+  discarded = fraction & mask;
+  half = 1u << (shift - 1u);
+  rounded = uf & ~mask;
+  if (discarded > half || (discarded == half && ((rounded >> shift) & 1u)))
+    rounded += 1u << shift;
+  return rounded;
 }
 
 // P17
@@ -367,7 +476,43 @@ unsigned floatRoundEven(unsigned uf) {
  *   Rating: 10
  */
 unsigned float_i2f(int x) {
-  return 17;
+  unsigned bits = x;
+  unsigned sign = 0;
+  unsigned magnitude;
+  unsigned exponent;
+  unsigned significand;
+  unsigned discarded;
+  unsigned half;
+  unsigned shift;
+  int highest = 31;
+
+  if (x == 0)
+    return 0;
+  if (x < 0) {
+    sign = 0x80000000u;
+    magnitude = ~bits + 1u;
+  } else {
+    magnitude = bits;
+  }
+
+  while (!(magnitude & (1u << highest)))
+    highest--;
+  exponent = highest + 127;
+  if (highest <= 23) {
+    significand = magnitude << (23 - highest);
+  } else {
+    shift = highest - 23;
+    significand = magnitude >> shift;
+    discarded = magnitude & ((1u << shift) - 1u);
+    half = 1u << (shift - 1u);
+    if (discarded > half || (discarded == half && (significand & 1u)))
+      significand++;
+    if (significand == (1u << 24)) {
+      significand >>= 1;
+      exponent++;
+    }
+  }
+  return sign | (exponent << 23) | (significand & 0x7fffffu);
 }
 
 
@@ -381,7 +526,18 @@ unsigned float_i2f(int x) {
  *   Rating: 10
  */
 int bitCount(int x) {
-  return 18;
+  int m1 = 0x55 | (0x55 << 8);
+  int m2 = 0x33 | (0x33 << 8);
+  int m4 = 0x0f | (0x0f << 8);
+  m1 = m1 | (m1 << 16);
+  m2 = m2 | (m2 << 16);
+  m4 = m4 | (m4 << 16);
+  x = (x & m1) + ((x >> 1) & m1);
+  x = (x & m2) + ((x >> 2) & m2);
+  x = (x & m4) + ((x >> 4) & m4);
+  x = x + (x >> 8);
+  x = x + (x >> 16);
+  return x & 0x3f;
 }
 
 // P19
@@ -395,5 +551,15 @@ int bitCount(int x) {
  */
 int bitReverse(int x)
 {
-  return 19;
+  int m8 = 0xff | (0xff << 16);
+  int m4 = m8 ^ (m8 << 4);
+  int m2;
+  int m1;
+  m2 = m4 ^ (m4 << 2);
+  m1 = m2 ^ (m2 << 1);
+  x = ((x >> 1) & m1) | ((x & m1) << 1);
+  x = ((x >> 2) & m2) | ((x & m2) << 2);
+  x = ((x >> 4) & m4) | ((x & m4) << 4);
+  x = ((x >> 8) & m8) | ((x & m8) << 8);
+  return (x << 16) | ((x >> 16) & (0xff | (0xff << 8)));
 }
